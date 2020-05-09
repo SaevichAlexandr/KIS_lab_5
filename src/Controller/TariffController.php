@@ -4,36 +4,29 @@
 namespace App\Controller;
 
 
+use App\Entity\Tariff;
+use App\Error\Error;
+use Doctrine\ORM\Mapping\Entity;
+use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
 use Symfony\Component\HttpFoundation\Response;
 use Symfony\Component\HttpFoundation\Request;
-use App\Error\Error;
 
-class TariffController
+class TariffController extends AbstractController
 {
-    private $code = "UTW10US";
-    private $description = "APPLICATION AND OTHER CONDITIONS RULE - 304/UT23 UNLESS OTHERWISE SPECIFIED ONE WAY MINIMUM".
-                            "FARE APPLICATION AREA THESE FARES APPLY WITHIN AREA 2. CLASS OF SERVICE THESE FARES APPLY ".
-                            "FOR ECONOMY CLASS SERVICE. TYPES OF TRANSPORTATION THIS RULE GOVERNS ONE-WAY FARES. FARES ".
-                            "GOVERNED BY THIS RULE CAN BE USED TO CREATE ONE-WAY JOURNEYS.";
-    private $refundable = true;
-    private $exchangeable = false;
-    private $baggage = "1PC";
-
     public function getTariff($tariffId)
     {
         $response = new Response();
-
-        if($tariffId > 0 && $tariffId <= 10) {
-            $response->setContent(json_encode(
-                [
-                    'id' => $tariffId,
-                    'code' => $this->code,
-                    'description' => $this->description,
-                    'refundable' => $this->refundable,
-                    'exchangeable' => $this->exchangeable,
-                    'baggage' => $this->baggage
-                ]
-            ));
+        $repository = $this->getDoctrine()->getRepository(Tariff::class);
+        $tariff = $repository->find($tariffId);
+        if($tariff)
+        {
+            $response->setContent(json_encode([
+                'id' => $tariff->getId(),
+                'code' => $tariff->getDescription(),
+                'refundable' => $tariff->getRefundable(),
+                'exchangeable' => $tariff->getExchangeable(),
+                'baggage' => $tariff->getBaggage()
+            ]));
             $response->headers->set('Content-type', 'application/json');
             return $response;
         }
@@ -46,15 +39,24 @@ class TariffController
         }
     }
 
-    public function createTariff()
+    public function createTariff(Request $request)
     {
-        $request = Request::createFromGlobals();
         $reqBody = json_decode($request->getContent(), true);
         $response = new Response();
 
         if($this->isValidReqBody($reqBody)) {
-            // здесь потом добавится добавление данных
-            $response->setContent(json_encode(['id' => rand(11, 100)]));
+            $tariff = new Tariff();
+            $tariff->setCode($reqBody['code']);
+            $tariff->setDescription($reqBody['description']);
+            $tariff->setRefundable($reqBody['refundable']);
+            $tariff->setExchangeable($reqBody['exchangeable']);
+            $tariff->setBaggage($reqBody['baggage']);
+
+            $entityManager = $this->getDoctrine()->getManager();
+            $entityManager->persist($tariff);
+            $entityManager->flush();
+
+            $response->setContent(json_encode(['id' => $tariff->getId()]));
             $response->headers->set('Content-type', 'application/json');
             return $response;
         }
@@ -66,20 +68,46 @@ class TariffController
         }
     }
 
-    public function updateTariff()
+    public function updateTariff($tariffId, Request $request)
     {
-        $request = Request::createFromGlobals();
         $reqBody = json_decode($request->getContent(), true);
         $response = new Response();
+        if($this->isValidReqBody($reqBody))
+        {
+            $repository = $this->getDoctrine()->getRepository(Tariff::class);
+            $tariff = $repository->find($tariffId);
+            if($tariff)
+            {
+                $tariff->setCode($reqBody['code']);
+                $tariff->setDescription($reqBody['description']);
+                $tariff->setRefundable($reqBody['refundable']);
+                $tariff->setExchangeable($reqBody['exchangeable']);
+                $tariff->setBaggage($reqBody['baggage']);
 
-        if($this->isValidReqBody($reqBody)) {
-            // здесь потом добавится изменение данных
-            // а пока так
-            $response->setContent(json_encode($reqBody));
-            $response->headers->set('Content-type', 'application/json');
-            return $response;
+                $entityManager = $this->getDoctrine()->getManager();
+                $entityManager->persist($tariff);
+                $entityManager->flush();
+
+                $response->setContent(json_encode([
+                    'id' => $tariff->getId(),
+                    'code' => $tariff->getDescription(),
+                    'refundable' => $tariff->getRefundable(),
+                    'exchangeable' => $tariff->getExchangeable(),
+                    'baggage' => $tariff->getBaggage()
+                ]));
+                $response->headers->set('Content-type', 'application/json');
+                return $response;
+            }
+            else
+            {
+                $error = new Error();
+                $response->setContent(json_encode($error->get404()));
+                $response->headers->set('Content-type', 'application/json');
+                return $response;
+            }
         }
-        else {
+        else
+        {
             $error = new Error();
             $response->setContent(json_encode($error->get422()));
             $response->headers->set('Content-type', 'application/json');
@@ -91,11 +119,20 @@ class TariffController
     {
         $response = new Response();
 
-        if($tariffId > 0 && $tariffId <= 10) {
+        $repository = $this->getDoctrine()->getRepository(Tariff::class);
+        $tariff = $repository->find($tariffId);
+        if($tariff)
+        {
+            $entityManager = $this->getDoctrine()->getManager();
+            $entityManager->remove($tariff);
+            $entityManager->flush();
+
             $response->setContent(json_encode(['isDeleted' => true]));
             $response->headers->set('Content-type', 'application/json');
             return $response;
-        } else {
+        }
+        else
+        {
             $error = new Error();
             $response->setContent(json_encode($error->get404()));
             $response->headers->set('Content-type', 'application/json');
