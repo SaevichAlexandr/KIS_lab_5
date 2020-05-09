@@ -3,19 +3,17 @@
 
 namespace App\Controller;
 
+use App\Entity\Tariff;
+use App\Entity\Flight;
+use App\Error\Error;
 use Symfony\Component\HttpFoundation\Response;
 use Symfony\Component\HttpFoundation\Request;
-use App\Error\Error;
+use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
+use DateTime;
 
-class FlightController
+class FlightController extends AbstractController
 {
-    private $departurePoint = 'MOW';
-    private $arrivalPoint = 'LED';
-    private $departureDatetime = '2017-07-21T18:30:00Z';
-    private $arrivalDatetime = '2017-07-24T08:00:00Z';
-    private $airCompany = 'UT';
-    private $flightNumber = 'UT-450';
-    private $cost = 10900.00;
+    private $datetimeFormat = 'Y-m-d H:i:s';
 
     public function getFlight($flightId)
     {
@@ -78,16 +76,29 @@ class FlightController
         return $response;
     }
 
-    public function createFlight()
+    public function createFlight(Request $request)
     {
-        $request = Request::createFromGlobals();
         $reqBody = json_decode($request->getContent(), true);
-
         $response = new Response();
 
         if($this->isValidReqBody($reqBody)) {
-            // здесь потом добавится добавление данных
-            $response->setContent(json_encode(['id' => rand(11, 100)]));
+            $departureDatetime = DateTime::createFromFormat($this->datetimeFormat, $reqBody['departureDatetime']);
+            $arrivalDatetime = DateTime::createFromFormat($this->datetimeFormat, $reqBody['arrivalDatetime']);
+
+            $flight = new Flight();
+            $flight->setDeparturePoint($reqBody['departurePoint']);
+            $flight->setArrivalPoint($reqBody['arrivalPoint']);
+            $flight->setDepartureDatetime($departureDatetime);
+            $flight->setArrivalDatetime($arrivalDatetime);
+            $flight->setAirCompany($reqBody['airCompany']);
+            $flight->setFlightNumber($reqBody['flightNumber']);
+            $flight->setCost($reqBody['cost']);
+
+            $entityManager = $this->getDoctrine()->getManager();
+            $entityManager->persist($flight);
+            $entityManager->flush();
+
+            $response->setContent(json_encode(['id' => $flight->getId()]));
             $response->headers->set('Content-type', 'application/json');
             return $response;
         }
@@ -99,18 +110,53 @@ class FlightController
         }
     }
 
-    public function updateFlight()
+    public function updateFlight($flightId, Request $request)
     {
-        $request = Request::createFromGlobals();
         $reqBody = json_decode($request->getContent(), true);
         $response = new Response();
 
-        if($this->isValidReqBody($reqBody)) {
-            // здесь потом добавится изменение данных
-            // а пока так
-            $response->setContent(json_encode($reqBody));
-            $response->headers->set('Content-type', 'application/json');
-            return $response;
+        if($this->isValidReqBody($reqBody))
+        {
+            $repository = $this->getDoctrine()->getRepository(Flight::class);
+            $flight = $repository->find($flightId);
+
+            if($flight)
+            {
+                $departureDatetime = DateTime::createFromFormat($this->datetimeFormat, $reqBody['departureDatetime']);
+                $arrivalDatetime = DateTime::createFromFormat($this->datetimeFormat, $reqBody['arrivalDatetime']);
+
+                $flight->setDeparturePoint($reqBody['departurePoint']);
+                $flight->setArrivalPoint($reqBody['arrivalPoint']);
+                $flight->setDepartureDatetime($departureDatetime);
+                $flight->setArrivalDatetime($arrivalDatetime);
+                $flight->setAirCompany($reqBody['airCompany']);
+                $flight->setFlightNumber($reqBody['flightNumber']);
+                $flight->setCost($reqBody['cost']);
+
+                $entityManager = $this->getDoctrine()->getManager();
+                $entityManager->persist($flight);
+                $entityManager->flush();
+
+                $response->setContent(json_encode([
+                    'id' => $flight->getId(),
+                    'departurePoint' => $flight->getDeparturePoint(),
+                    'arrivalPoint' => $flight->getArrivalPoint(),
+                    'departureDatetime' => $flight->getDepartureDatetime(),
+                    'arrivalDatetime' => $flight->getArrivalDatetime(),
+                    'airCompany' => $flight->getAirCompany(),
+                    'flightNumber' => $flight->getFlightNumber(),
+                    'cost' => $flight->getCost()
+                ]));
+                $response->headers->set('Content-type', 'application/json');
+                return $response;
+            }
+            else
+            {
+                $error = new Error();
+                $response->setContent(json_encode($error->get404()));
+                $response->headers->set('Content-type', 'application/json');
+                return $response;
+            }
         }
         else {
             $error = new Error();
@@ -124,11 +170,20 @@ class FlightController
     {
         $response = new Response();
 
-        if($flightId > 0 && $flightId <= 10) {
+        $repository = $this->getDoctrine()->getRepository(Flight::class);
+        $flight = $repository->find($flightId);
+        if($flight)
+        {
+            $entityManager = $this->getDoctrine()->getManager();
+            $entityManager->remove($flight);
+            $entityManager->flush();
+
             $response->setContent(json_encode(['isDeleted' => true]));
             $response->headers->set('Content-type', 'application/json');
             return $response;
-        } else {
+        }
+        else
+        {
             $error = new Error();
             $response->setContent(json_encode($error->get404()));
             $response->headers->set('Content-type', 'application/json');

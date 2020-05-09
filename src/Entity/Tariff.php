@@ -42,6 +42,12 @@ class Tariff
      */
     private $baggage;
 
+    /**
+     * @ORM\ManyToOne(targetEntity="App\Entity\Flight", inversedBy="tariffs")
+     * @ORM\JoinColumn(nullable=false)
+     */
+    private $flight;
+
     public function getId(): ?int
     {
         return $this->id;
@@ -103,6 +109,18 @@ class Tariff
     public function setBaggage(string $baggage): self
     {
         $this->baggage = $baggage;
+
+        return $this;
+    }
+
+    public function getFlight(): ?Flight
+    {
+        return $this->flight;
+    }
+
+    public function setFlight(?Flight $flight): self
+    {
+        $this->flight = $flight;
 
         return $this;
     }

@@ -3,6 +3,8 @@
 namespace App\Entity;
 
 use App\Repository\FlightRepository;
+use Doctrine\Common\Collections\Collection;
+use Doctrine\Common\Collections\ArrayCollection;
 use Doctrine\ORM\Mapping as ORM;
 
 /**
@@ -51,6 +53,16 @@ class Flight
      * @ORM\Column(type="float")
      */
     private $cost;
+
+    /**
+     * @ORM\OneToMany(targetEntity="App\Entity\Tariff", mappedBy="flight", orphanRemoval=true)
+     */
+    private $tariffs;
+
+    public function __construct()
+    {
+        $this->tariffs = new ArrayCollection();
+    }
 
     public function getId(): ?int
     {
@@ -137,6 +149,37 @@ class Flight
     public function setCost(float $cost): self
     {
         $this->cost = $cost;
+
+        return $this;
+    }
+
+    /**
+     * @return Collection|Tariff[]
+     */
+    public function getTariffs(): Collection
+    {
+        return $this->tariffs;
+    }
+
+    public function addtariff(Tariff $tariff): self
+    {
+        if (!$this->tariffs->contains($tariff)) {
+            $this->tariffs[] = $tariff;
+            $tariff->setDeveloper($this);
+        }
+
+        return $this;
+    }
+
+    public function removeTariff(tariff $tariff): self
+    {
+        if ($this->tariffs->contains($tariff)) {
+            $this->tariffs->removeElement($tariff);
+            // set the owning side to null (unless already changed)
+            if ($tariff->getFlight() === $this) {
+                $tariff->setFlight(null);
+            }
+        }
 
         return $this;
     }

@@ -6,6 +6,7 @@ namespace App\Controller;
 
 use App\Entity\Tariff;
 use App\Error\Error;
+use App\Entity\Flight;
 use Doctrine\ORM\Mapping\Entity;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
 use Symfony\Component\HttpFoundation\Response;
@@ -25,7 +26,8 @@ class TariffController extends AbstractController
                 'code' => $tariff->getDescription(),
                 'refundable' => $tariff->getRefundable(),
                 'exchangeable' => $tariff->getExchangeable(),
-                'baggage' => $tariff->getBaggage()
+                'baggage' => $tariff->getBaggage(),
+                'flightId' => $tariff->getFlight->getId()
             ]));
             $response->headers->set('Content-type', 'application/json');
             return $response;
@@ -45,20 +47,35 @@ class TariffController extends AbstractController
         $response = new Response();
 
         if($this->isValidReqBody($reqBody)) {
-            $tariff = new Tariff();
-            $tariff->setCode($reqBody['code']);
-            $tariff->setDescription($reqBody['description']);
-            $tariff->setRefundable($reqBody['refundable']);
-            $tariff->setExchangeable($reqBody['exchangeable']);
-            $tariff->setBaggage($reqBody['baggage']);
+            $repository = $this->getDoctrine()
+                ->getRepository(Flight::class);
+            $flight = $repository->find($reqBody['flightId']);
 
-            $entityManager = $this->getDoctrine()->getManager();
-            $entityManager->persist($tariff);
-            $entityManager->flush();
+            if($flight)
+            {
+                $tariff = new Tariff();
+                $tariff->setCode($reqBody['code']);
+                $tariff->setDescription($reqBody['description']);
+                $tariff->setRefundable($reqBody['refundable']);
+                $tariff->setExchangeable($reqBody['exchangeable']);
+                $tariff->setBaggage($reqBody['baggage']);
+                $tariff->setFlight($flight);
 
-            $response->setContent(json_encode(['id' => $tariff->getId()]));
-            $response->headers->set('Content-type', 'application/json');
-            return $response;
+                $entityManager = $this->getDoctrine()->getManager();
+                $entityManager->persist($tariff);
+                $entityManager->flush();
+
+                $response->setContent(json_encode(['id' => $tariff->getId()]));
+                $response->headers->set('Content-type', 'application/json');
+                return $response;
+            }
+            else
+            {
+                $error = new Error();
+                $response->setContent(json_encode($error->get404()));
+                $response->headers->set('Content-type', 'application/json');
+                return $response;
+            }
         }
         else {
             $error = new Error();
@@ -74,15 +91,20 @@ class TariffController extends AbstractController
         $response = new Response();
         if($this->isValidReqBody($reqBody))
         {
-            $repository = $this->getDoctrine()->getRepository(Tariff::class);
-            $tariff = $repository->find($tariffId);
-            if($tariff)
+            $repositoryTariff = $this->getDoctrine()->getRepository(Tariff::class);
+            $tariff = $repositoryTariff->find($tariffId);
+
+            $repositoryFlight = $this->getDoctrine()->getRepository(Flight::class);
+            $flight = $repositoryFlight->find($reqBody['flightId']);
+
+            if($tariff && $flight)
             {
                 $tariff->setCode($reqBody['code']);
                 $tariff->setDescription($reqBody['description']);
                 $tariff->setRefundable($reqBody['refundable']);
                 $tariff->setExchangeable($reqBody['exchangeable']);
                 $tariff->setBaggage($reqBody['baggage']);
+                $tariff->setFlight($flight);
 
                 $entityManager = $this->getDoctrine()->getManager();
                 $entityManager->persist($tariff);
@@ -93,7 +115,8 @@ class TariffController extends AbstractController
                     'code' => $tariff->getDescription(),
                     'refundable' => $tariff->getRefundable(),
                     'exchangeable' => $tariff->getExchangeable(),
-                    'baggage' => $tariff->getBaggage()
+                    'baggage' => $tariff->getBaggage(),
+                    'flightId' => $tariff->getFlight()->getId()
                 ]));
                 $response->headers->set('Content-type', 'application/json');
                 return $response;
