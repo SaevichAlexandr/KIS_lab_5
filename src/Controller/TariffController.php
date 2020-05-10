@@ -27,7 +27,7 @@ class TariffController extends AbstractController
                 'refundable' => $tariff->getRefundable(),
                 'exchangeable' => $tariff->getExchangeable(),
                 'baggage' => $tariff->getBaggage(),
-                'flightId' => $tariff->getFlight->getId()
+                'flightId' => $tariff->getFlight()->getId()
             ]));
             $response->headers->set('Content-type', 'application/json');
             return $response;
@@ -170,14 +170,16 @@ class TariffController extends AbstractController
             isset($reqBody['description']) &&
             isset($reqBody['refundable']) &&
             isset($reqBody['exchangeable']) &&
-            isset($reqBody['baggage'])
+            isset($reqBody['baggage']) &&
+            isset($reqBody['flightId'])
         ) {
             if (
                     is_string($reqBody['code']) &&
                     is_string($reqBody['description']) &&
                     is_bool($reqBody['refundable']) &&
                     is_bool($reqBody['exchangeable']) &&
-                    is_string($reqBody['baggage'])
+                    is_string($reqBody['baggage']) &&
+                    is_integer($reqBody['flightId'])
             ) {
                 return true;
             }
