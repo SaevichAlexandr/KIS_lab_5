@@ -46,7 +46,7 @@ class FlightController extends AbstractController
         }
     }
 
-    public function getFlights()
+    public function getAll()
     {
         $repository = $this->getDoctrine()->getRepository(Flight::class);
         $flights = $repository->findAll();
@@ -84,7 +84,7 @@ class FlightController extends AbstractController
         }
     }
 
-    public function createFlight(Request $request)
+    public function create(Request $request)
     {
         $reqBody = json_decode($request->getContent(), true);
         $response = new Response();
@@ -118,7 +118,7 @@ class FlightController extends AbstractController
         }
     }
 
-    public function updateFlight($flightId, Request $request)
+    public function update($flightId, Request $request)
     {
         $reqBody = json_decode($request->getContent(), true);
         $response = new Response();
@@ -174,7 +174,7 @@ class FlightController extends AbstractController
         }
     }
 
-    public function deleteFlight($flightId)
+    public function delete($flightId)
     {
         $response = new Response();
 
@@ -213,7 +213,8 @@ class FlightController extends AbstractController
             {
                 $item = [
                     'id' => $tariff->getId(),
-                    'code' => $tariff->getDescription(),
+                    'code' => $tariff->getCode(),
+                    'description' => $tariff->getDescription(),
                     'refundable' => $tariff->getRefundable(),
                     'exchangeable' => $tariff->getExchangeable(),
                     'baggage' => $tariff->getBaggage(),

@@ -61,7 +61,7 @@ class AuthController
         switch ($email)
         {
             case 'dio_brando@mail.com':
-                $rules = 'Flight:create,update;Tariff:create';
+                $rules = 'Flight:create,update;Tariff:create,update';
                 $token = "{$email}.{$rules}";
                 return base64_encode($token);
             case 'joseph_joestar@mail.com':

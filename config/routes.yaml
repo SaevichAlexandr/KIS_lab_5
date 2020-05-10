@@ -15,26 +15,26 @@ GetTariff:
 
 CreateTariff:
   path:       /tariff
-  controller: App\Controller\TariffController::createTariff
+  controller: App\Controller\TariffController::create
   methods:    POST
 
 UpdateTariff:
   path:       /tariff/{tariffId}
-  controller: App\Controller\TariffController::updateTariff
+  controller: App\Controller\TariffController::update
   methods:    PATCH
   requirements:
     tariffId: '\d+'
 
 DeleteTariff:
   path:       /tariff/{tariffId}
-  controller: App\Controller\TariffController::deleteTariff
+  controller: App\Controller\TariffController::delete
   methods:    DELETE
   requirements:
     tariffId: '\d+'
 
 GetFlights:
   path:       /flights
-  controller: App\Controller\FlightController::getFlights
+  controller: App\Controller\FlightController::getAll
   methods:    GET
 
 GetFlight:
@@ -46,19 +46,19 @@ GetFlight:
 
 CreateFlight:
   path:       /flight
-  controller: App\Controller\FlightController::createFlight
+  controller: App\Controller\FlightController::create
   methods:    POST
 
 UpdateFlight:
   path:       /flight/{flightId}
-  controller: App\Controller\FlightController::updateFlight
+  controller: App\Controller\FlightController::update
   methods:    PATCH
   requirements:
     flightId: '\d+'
 
 DeleteFlight:
   path:       /flight/{flightId}
-  controller: App\Controller\FlightController::deleteFlight
+  controller: App\Controller\FlightController::delete
   methods:    DELETE
   requirements:
     flightId: '\d+'

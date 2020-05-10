@@ -36,6 +36,16 @@ class Error
         ];
     }
 
+    public function get410()
+    {
+        return $errorDescription = [
+            'status' => 410,
+            'error' => '410 No pass for this action',
+            'type' => 'blah, blah, blah...',
+            'title' => 'blah, blah, blah...'
+        ];
+    }
+
     public function get422()
     {
         return $errorDescription = [

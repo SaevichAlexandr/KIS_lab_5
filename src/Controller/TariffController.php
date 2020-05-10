@@ -41,7 +41,7 @@ class TariffController extends AbstractController
         }
     }
 
-    public function createTariff(Request $request)
+    public function create(Request $request)
     {
         $reqBody = json_decode($request->getContent(), true);
         $response = new Response();
@@ -85,7 +85,7 @@ class TariffController extends AbstractController
         }
     }
 
-    public function updateTariff($tariffId, Request $request)
+    public function update($tariffId, Request $request)
     {
         $reqBody = json_decode($request->getContent(), true);
         $response = new Response();
@@ -138,7 +138,7 @@ class TariffController extends AbstractController
         }
     }
 
-    public function deleteTariff($tariffId)
+    public function delete($tariffId)
     {
         $response = new Response();
 
